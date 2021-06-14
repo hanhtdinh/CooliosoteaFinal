@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace CooliosoteaFinal.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Administrator")]
 
     public class CategoriesController : Controller
     {

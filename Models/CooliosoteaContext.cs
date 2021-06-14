@@ -38,7 +38,7 @@ namespace CooliosoteaFinal.Models
             base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<Cart>(entity =>
             {
-                entity.Property(e => e.CartId).IsUnicode(false);
+                //entity.Property(e => e.CartId).IsUnicode(false);
 
                 entity.Property(e => e.Quantity).HasDefaultValueSql("((1))");
 
