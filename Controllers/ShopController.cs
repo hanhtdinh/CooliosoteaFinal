@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using CooliosoteaFinal.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CooliosoteaFinal.Controllers
 {
@@ -69,11 +70,11 @@ namespace CooliosoteaFinal.Controllers
         private string GetCartUserName()
         {
             //see if username is stored in their session
-            if(HttpContext.Session.GetString("CartUsername") ==null)
+            if (HttpContext.Session.GetString("CartUsername") == null)
             {
                 var cartUsername = "";
                 //check if user is logged in. if they are use email for their variable
-                if(User.Identity.IsAuthenticated)
+                if (User.Identity.IsAuthenticated)
                 {
                     cartUsername = User.Identity.Name;
                 }
@@ -93,7 +94,7 @@ namespace CooliosoteaFinal.Controllers
             //find out who is the user
             var cartUsername = GetCartUserName();
             //Query DB To get their added items from cart
-            var cartItems = _context.Cart.Include(c => c.Product).Where(c=> c.Username == cartUsername).ToList();
+            var cartItems = _context.Cart.Include(c => c.Product).Where(c => c.Username == cartUsername).ToList();
             //pass view to pass items to be shown to cust
             return View(cartItems);
         }
@@ -108,6 +109,54 @@ namespace CooliosoteaFinal.Controllers
             _context.SaveChanges();
             //shows cart again refreshed
             return RedirectToAction("Cart");
+        }
+        [Authorize]
+        public IActionResult Checkout()
+        {
+            //check if they have bene shopping as anon now that they are logged in
+            MigrateCart();
+            return View();
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        //get all the regis info into our order model
+        public IActionResult Checkout([Bind("FirstName, LastName, Address, City, Province, PostalCode, Phone")] Order order)
+        {
+            //date, user and total will be auto generated instead of user inputting
+            order.OrderDate = DateTime.Now;
+            order.UserId = User.Identity.Name;
+            var cartItems = _context.Cart.Where(c => c.Username == User.Identity.Name);
+            decimal cartTotal = (from c in cartItems
+                                 select c.Quantity * c.Price).Sum();
+
+            order.Total = cartTotal;
+            HttpContext.Session.SetString("cartTotal", cartTotal.ToString());
+
+            return RedirectToAction("Payment");
+
+        }
+        private void MigrateCart()
+        {
+            //if they originally did not have acc add their items to their newly created username
+            if (HttpContext.Session.GetString("CartUsername") != User.Identity.Name)
+            {
+                var cartUsername = HttpContext.Session.GetString("CartUsername");
+                
+
+                //get the items
+                var cartItems = _context.Cart.Where(c => c.Username == cartUsername);
+                //get all cart items thru loop and uodate username for each associated item
+                foreach (var item in cartItems)
+                {
+                    item.Username = User.Identity.Name;
+                    _context.Update(item);
+                }
+                _context.SaveChanges();
+                //update session from guid to user email
+                HttpContext.Session.SetString("CartUsername", User.Identity.Name);
+            }
         }
     }
 }
