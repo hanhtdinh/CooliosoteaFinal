@@ -47,6 +47,8 @@ namespace CooliosoteaFinal
             //    .AddEntityFrameworkStores<CooliosoteaContext>();
             services.AddControllersWithViews();
             services.AddRazorPages();
+            services.AddSession(); 
+            //create session
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -70,6 +72,8 @@ namespace CooliosoteaFinal
 
             app.UseAuthentication();
             app.UseAuthorization();
+            //add session
+            app.UseSession();
 
             app.UseEndpoints(endpoints =>
             {
