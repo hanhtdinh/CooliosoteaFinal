@@ -1,4 +1,4 @@
-﻿
+﻿@model IEnumerable<CooliosoteaFinal.Models.Product>
 @{
     ViewData["Title"] = "Refresh your soul and drink some boba! ";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -6,7 +6,7 @@
 
 <h1>Choose your delicious drink(s)!</h1>
 <ul>
-    <li>
+    @*<li>
         <a asp-controller="Store" asp-action="Details" asp-route-product="Product 1"> Drink 1 </a>
     </li>
  
@@ -15,6 +15,10 @@
     </li>
     <li>
         <a asp-controller="Store" asp-action="Details" asp-route-product="Product 3"> Drink 3 </a>
-    </li>
+    </li>*@
+    @foreach (var product in Model)
+    {
+        <li> <a asp-controller="Store" asp-action="Details" asp-route-product= "@product.Name"> @product.Name</a></li>
+    }
 </ul>
 

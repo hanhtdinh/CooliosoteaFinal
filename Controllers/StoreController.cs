@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using CooliosoteaFinal.Models;
 using System.Threading.Tasks;
 
 namespace CooliosoteaFinal.Controllers
@@ -10,7 +11,13 @@ namespace CooliosoteaFinal.Controllers
     {
         public IActionResult Index()
         {
-            return View();
+            //list of products
+            var products = new List<Product>();
+            for(var i=1;i<=10; i++)
+            {
+                products.Add(new Product { Name = "Product" + i.ToString() });
+            }
+            return View(products);
         }
 
         public IActionResult Details(string product)
