@@ -52,19 +52,33 @@ namespace CooliosoteaFinal.Controllers
             //try to save item into the cart
             //get username
             var cartUsername = GetCartUserName();
-            var cart = new Cart
+
+            //see if product already exists in the cart so can update quantity
+            var cartItem = _context.Cart.SingleOrDefault(c => c.ProductId == ProductId && c.Username == cartUsername);
+            if (cartItem == null)
             {
-                ProductId = ProductId,
-                Quantity = Quantity,
-                Price = price,
-                Username = cartUsername
-            };
-            _context.Cart.Add(cart);
-            _context.SaveChanges();
+
+
+                var cart = new Cart
+                {
+                    ProductId = ProductId,
+                    Quantity = Quantity,
+                    Price = price,
+                    Username = cartUsername
+                };
+                _context.Cart.Add(cart);
+            }
+            else
+            {
+                cartItem.Quantity += Quantity; //add the new quantity to existing quantity
+                _context.Update(cartItem);
+            }
+                _context.SaveChanges();
+            
 
             //show what they have in the cart
 
-            return RedirectToAction("cart");
+            return RedirectToAction("Cart");
         }
 
         private string GetCartUserName()
@@ -157,6 +171,11 @@ namespace CooliosoteaFinal.Controllers
                 //update session from guid to user email
                 HttpContext.Session.SetString("CartUsername", User.Identity.Name);
             }
+        }
+
+        public IActionResult Payment()
+        {
+            return View();
         }
     }
 }
