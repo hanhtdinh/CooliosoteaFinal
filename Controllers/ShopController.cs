@@ -7,6 +7,8 @@ using CooliosoteaFinal.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Configuration;
+using Stripe;
 
 namespace CooliosoteaFinal.Controllers
 {
@@ -14,10 +16,14 @@ namespace CooliosoteaFinal.Controllers
     {
         //adding db connection
         private readonly CooliosoteaContext _context;
-
-        public ShopController(CooliosoteaContext context)
+        //add configuration so controller can read values in appsetting.json
+        private IConfiguration _configuration;
+        public ShopController(CooliosoteaContext context, IConfiguration configuration)
         {
+
             _context = context;
+            //accept instance of config obj so we can read appsetting json
+            _configuration = configuration;
         }
         public IActionResult Index()
         {
@@ -136,7 +142,7 @@ namespace CooliosoteaFinal.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         //get all the regis info into our order model
-        public IActionResult Checkout([Bind("FirstName, LastName, Address, City, Province, PostalCode, Phone")] Order order)
+        public IActionResult Checkout([Bind("FirstName, LastName, Address, City, Province, PostalCode, Phone")] Models.Order order)
         {
             //date, user and total will be auto generated instead of user inputting
             order.OrderDate = DateTime.Now;
@@ -146,6 +152,9 @@ namespace CooliosoteaFinal.Controllers
                                  select c.Quantity * c.Price).Sum();
 
             order.Total = cartTotal;
+            //need sessionextension to store complex object
+            HttpContext.Session.SetObject("Order", order);
+
             HttpContext.Session.SetString("cartTotal", cartTotal.ToString());
 
             return RedirectToAction("Payment");
@@ -175,7 +184,33 @@ namespace CooliosoteaFinal.Controllers
 
         public IActionResult Payment()
         {
+            //get order from session variable and cast as order obj
+            var order = HttpContext.Session.GetObject<Models.Order>("Order");
+            //display total and pass amount to Stripe Api
+            ViewBag.Total = order.Total;
+            //convert total into cents only for stripe since takes it in that value
+            ViewBag.CentsTotal = order.Total * 100;
+            ViewBag.PublishableKey = _configuration.GetSection("Stripe")["PublishableKey"];
             return View();
+
+            //this is for authorizing the payment but we haven't really gotten their info yet
+        }
+        
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken] //good practice
+        public IActionResult Payment(string stripeEmail, string stripeToken)
+        {
+            //send payment to stripe and then generate and save order
+            StripeConfiguration.ApiKey = _configuration.GetSection("Stripe")["SecretKey"];
+            var cartUsername = HttpContext.Session.GetString("CartUsername");
+            var cartItems = _context.Cart.Where(c => c.Username == cartUsername);
+            var order=HttpContext.Session.GetObject<Order
+            //save the order details, get rid of the card so it refreshes
+            //confirm with total amount shown as a receipt
+
+            return RedirectToAction("Details", "Orders");
+
         }
     }
 }

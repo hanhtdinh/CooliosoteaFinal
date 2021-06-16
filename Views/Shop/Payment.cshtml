@@ -4,5 +4,17 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Payment</h1>
+<h1>Thank you for placing an order. It will be sent shortly!</h1>
+<h2>
+    Payment
+    Order Total:@String.Format("{0:c}", ViewBag.Total)
+</h2>
 
+<form method="post">
+    <script src="https://checkout.stripe.com/checkout.js"
+            class="stripe-button"
+            data-amount="@ViewBag.CentsTotal"
+            data-name="CooliosoteaFinal"
+            data-currency="usd"
+            data-key="@ViewBag.PublishableKey"></script>
+      </form>
