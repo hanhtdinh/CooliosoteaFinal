@@ -37,7 +37,7 @@ namespace CooliosoteaFinal.Models
         public string City { get; set; }
         [Required]
         [StringLength(100)]
-        public string Province { get; set; }
+        public string State { get; set; }
         [Required]
         [StringLength(10)]
         public string PostalCode { get; set; }

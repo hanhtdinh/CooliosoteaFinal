@@ -70,7 +70,7 @@ namespace CooliosoteaFinal.Models
 
                 entity.Property(e => e.PostalCode).IsUnicode(false);
 
-                entity.Property(e => e.Province).IsUnicode(false);
+                entity.Property(e => e.State).IsUnicode(false);
 
                 entity.Property(e => e.UserId).IsUnicode(false);
             });

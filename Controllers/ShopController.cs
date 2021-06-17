@@ -205,11 +205,56 @@ namespace CooliosoteaFinal.Controllers
             StripeConfiguration.ApiKey = _configuration.GetSection("Stripe")["SecretKey"];
             var cartUsername = HttpContext.Session.GetString("CartUsername");
             var cartItems = _context.Cart.Where(c => c.Username == cartUsername);
-            var order=HttpContext.Session.GetObject<Order
-            //save the order details, get rid of the card so it refreshes
-            //confirm with total amount shown as a receipt
+            var order = HttpContext.Session.GetObject<Models.Order>("Order");
 
-            return RedirectToAction("Details", "Orders");
+            //new stripe attempt
+            var customerService = new CustomerService();
+            var chargeservices = new ChargeService();
+            //gets new customer email from payment form
+            var customer = customerService.Create(new CustomerCreateOptions
+            {
+                Email=stripeEmail,
+                Source=stripeToken
+            });
+            
+            var charge = chargeservices.Create(new ChargeCreateOptions
+            {
+                Amount = Convert.ToInt32(order.Total * 100),
+                Description = "Cooliosotea Purchase",
+                Currency = "usd",
+                Customer = customer.Id
+            });
+
+            //generate and save new order
+            _context.Order.Add(order);
+            _context.SaveChanges();
+
+            //save order details
+            foreach (var item in cartItems)
+            {
+                var orderDetail = new OrderDetail
+                {
+                    OrderId = order.OrderId,
+                    ProductId = item.ProductId,
+                    Quantity = item.Quantity,
+                    Price = item.Price
+                };
+                _context.OrderDetail.Add(orderDetail);
+            }
+            _context.SaveChanges();
+
+            //delete cart 
+            foreach(var item in cartItems)
+            {
+                _context.Cart.Remove(item);
+               
+            }
+
+            _context.SaveChanges();
+
+            //confirm with receipt
+
+            return RedirectToAction("Details", "Orders", new { id = order.OrderId });
 
         }
     }
